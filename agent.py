@@ -1,11 +1,11 @@
-import os
+﻿import os
 import subprocess
 import re
 from huggingface_hub import InferenceClient
 
 class MultiLanguageCoder:
     def __init__(self, token: str):
-        # Using the fast 7B model
+        # Using the lightning-fast 7B coding model
         self.model_id = "Qwen/Qwen2.5-Coder-7B-Instruct"
         self.client = InferenceClient(model=self.model_id, token=token)
         
@@ -33,12 +33,12 @@ class MultiLanguageCoder:
             max_tokens=1500
         )
         
-        # FIXED: Added [0] index to grab choice content smoothly
+        # Pull content via index fix
         raw_output = completion.choices[0].message.content.strip()
         
-        # Helper: Use a Regular Expression to drop markdown code blocks if the AI slips up
-        clean_code = re.sub(r'^```[a-zA-Z]*\n', '', raw_output) # Removes opening ```javascript
-        clean_code = re.sub(r'\n```\$', '', clean_code)         # Removes closing ```
+        # Clean up any leftover markdown code blocks if the AI outputs them
+        clean_code = re.sub(r'^```[a-zA-Z]*\n', '', raw_output)
+        clean_code = re.sub(r'\n```$', '', clean_code)
         return clean_code.strip()
 
     def run_autonomous_loop(self, task_description: str, max_attempts: int = 5):
@@ -54,15 +54,15 @@ class MultiLanguageCoder:
         for attempt in range(1, max_attempts + 1):
             print(f"\n--- 🚀 Attempt {attempt} of {max_attempts} ---")
             
-            # Step 1: Generate Code
-            raw_code = self.generate_code_block(current_prompt, is_javascript, error_message=error_context)
+            # Step 1: AI generates code
+            raw_code = self.generate_code_block(current_prompt, error_message=error_context)
             
-            # Step 2: Write File
+            # Step 2: Write code directly to file
             with open(filename, "w", encoding="utf-8") as f:
                 f.write(raw_code)
             print(f"💾 Saved code to '{filename}'")
             
-            # Step 3: Execute Code
+            # Step 3: Run the code dynamically using your launcher command
             print(f"⚙️ Executing script with {' '.join(run_command)}...")
             result = subprocess.run(run_command, capture_output=True, text=True)
             
