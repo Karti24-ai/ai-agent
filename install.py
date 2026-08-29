@@ -22,9 +22,9 @@ else:
 os.makedirs(install_dir, exist_ok=True)
 agent_file_path = os.path.join(install_dir, "agent.py")
 
-# 3. Smart Branch Checking Conditions
-url_main = "https://github.com"
-url_master = "https://github.com"
+# 3. Smart Branch Checking Conditions to download code
+url_main = "https://githubusercontent.com"
+url_master = "https://githubusercontent.com"
 
 print("📥 Fetching latest agent code from the web...")
 try:
@@ -38,31 +38,50 @@ except Exception as main_error:
         urllib.request.urlretrieve(url_master, agent_file_path)
         print("✅ Download from 'master' branch complete!")
     except Exception as master_error:
-        print("\n🌐 Network Error detected (getaddrinfo failed).")
-        
-        # --- LOCAL BACKUP AUTO-RECOVERY ---
-        print("🛡️ Activating Local Backup Protection Rule...")
+        print("\n🌐 Network Error detected. Checking local fallback...")
         local_backup = "agent.py"
         if os.path.exists(local_backup):
             shutil.copy(local_backup, agent_file_path)
-            print("✅ SUCCESS: Restored your clean working version from local backup folder!")
+            print("✅ SUCCESS: Restored clean version from local folder!")
         else:
-            print("❌ Critical Error: No local backup or internet connection available.")
+            print("❌ Critical Error: No local backup or internet available.")
             sys.exit()
 
-# 4. Install dependencies (huggingface_hub)
-print(f"📦 Installing required libraries via {python_command} pip...")
+# 4. 🧙‍♂️ THE SETUP WIZARD: Secure Token Setup for the User
+print("\n🔮 STARTING SETUP WIZARD...")
+print("🔑 Configuring Secret API Token...")
+current_token = os.getenv("HF_TOKEN")
+if current_token:
+    print("✅ HF_TOKEN is already configured on this machine!")
+else:
+    print("💡 To use this agent, you need a free token from hf.co/settings/tokens")
+    user_token = input("👉 Paste your Hugging Face API Token (Read or Write role) here: ").strip()
+    
+    if user_token:
+        if is_windows:
+            # Set the user-level environment variable permanently on Windows
+            subprocess.run(["powershell", "-Command", f'[Environment]::SetEnvironmentVariable("HF_TOKEN", "{user_token}", "User")'], capture_output=True)
+        else:
+            # For Mac, append it directly to their profile configuration
+            zshrc_path = os.path.expanduser("~/.zshrc")
+            with open(zshrc_path, "a", encoding="utf-8") as zsh_file:
+                zsh_file.write(f'\nexport HF_TOKEN="{user_token}"\n')
+        print("✅ Token saved securely onto your operating system environment variables!")
+    else:
+        print("⚠️ Warning: No token was entered. You will need to configure HF_TOKEN manually later.")
+
+# 5. Install dependencies (huggingface_hub)
+print(f"\n📦 Installing required libraries via {python_command} pip...")
 try:
     subprocess.run([python_command, "-m", "pip", "install", "huggingface_hub"], capture_output=True)
     print("✅ Libraries verified!")
 except Exception as e:
     print(f"⚠️ Warning: Could not run pip automatically: {e}")
 
-# 5. OS-Specific Shortcut Registration
+# 6. OS-Specific Shortcut Registration
 print("⚙️ Setting up terminal shortcut command...")
 
 if is_windows:
-    # --- WINDOWS SETUP (PowerShell) ---
     powershell_setup_code = f"""
 function agent {{
     cd "{install_dir}"
@@ -83,14 +102,12 @@ function agent {{
         print(f"❌ Windows shortcut failed: {e}")
 
 else:
-    # --- MAC SETUP (Zsh Terminal) ---
     mac_shortcut_code = f"alias agent='cd {install_dir} && python3 agent.py'"
     zshrc_path = os.path.expanduser("~/.zshrc")
     
     try:
         with open(zshrc_path, "a", encoding="utf-8") as zsh_file:
             zsh_file.write("\n" + mac_shortcut_code + "\n")
-            
         print("\n🎉 SUCCESS! Please restart the Terminal and type 'agent'!")
     except Exception as e:
         print(f"❌ Mac shortcut failed: {e}")

@@ -1,6 +1,7 @@
 ﻿import os
 import subprocess
 import re
+import sys
 from huggingface_hub import InferenceClient
 
 class MultiLanguageCoder:
@@ -19,7 +20,7 @@ class MultiLanguageCoder:
         
         user_content = prompt
         if error_message:
-            user_content += f"\n\nCRITICAL ERROR: Your previous attempt failed with this error:\n{error_message}\nFix the bugs completely and rewrite the entire script perfectly."
+            user_content += f"\n\nCRITICAL ERROR: Your previous attempt failed with this error:\n{error_message}\n"
 
         print(f"🤖 [Agent] Querying {self.model_id} via Inference API...")
         messages = [
@@ -33,7 +34,7 @@ class MultiLanguageCoder:
             max_tokens=1500
         )
         
-        # Pull content via index fix
+        # Pull content cleanly via index fix
         raw_output = completion.choices[0].message.content.strip()
         
         # Clean up any leftover markdown code blocks if the AI outputs them
@@ -55,7 +56,7 @@ class MultiLanguageCoder:
             print(f"\n--- 🚀 Attempt {attempt} of {max_attempts} ---")
             
             # Step 1: AI generates code
-            raw_code = self.generate_code_block(current_prompt, error_message=error_context)
+            raw_code = self.generate_code_block(current_prompt, is_javascript, error_message=error_context)
             
             # Step 2: Write code directly to file
             with open(filename, "w", encoding="utf-8") as f:
@@ -80,7 +81,14 @@ class MultiLanguageCoder:
 
 # --- Run the Multi-Language Agent ---
 if __name__ == "__main__":
-    HF_TOKEN = "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"
+    # 🧠 Safely pulls the token out of your Windows Environment variables invisibly!
+    HF_TOKEN = os.getenv("HF_TOKEN")
+    
+    if not HF_TOKEN:
+        print("❌ Error: HF_TOKEN environment variable not found on this machine!")
+        print("Please set it up using your installer or by running the PowerShell command.")
+        sys.exit()
+        
     agent = MultiLanguageCoder(token=HF_TOKEN)
     
     print("==================================================")
@@ -99,3 +107,4 @@ if __name__ == "__main__":
             continue
             
         agent.run_autonomous_loop(user_task)
+
