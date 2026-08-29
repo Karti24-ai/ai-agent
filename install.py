@@ -141,4 +141,3 @@ else:
         print("\n🎉 SUCCESS! Please restart the Terminal and type 'agent'!")
     except Exception as e:
         print(f"❌ Mac shortcut failed: {e}")
-
