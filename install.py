@@ -5,19 +5,55 @@ import sys
 import shutil
 
 print("==============================================")
-print("🚀 Custom Bulletproof Agent Installer         ")
+print("🚀 Custom Adaptive Onboarding Setup Wizard   ")
 print("==============================================")
 
-# 1. Detect the Operating System
+# 1. Unified Operating System Inspection Layer
 is_windows = os.name == 'nt'
 
-# 2. Set the install folder location based on the OS
+# 2. Automated Dependency Injector (Checks and Configures Python Paths)
 if is_windows:
     install_dir = os.path.expanduser(r"~\Documents\RoboticsAgent")
     python_command = "py"
+    
+    # Verify if execution environments are globally recognized
+    if shutil.which("py") is None and shutil.which("python") is None:
+        print("⚠️ Python environment missing from Windows registry!")
+        print("📥 Deploying background installation via WinGet...")
+        try:
+            # Silent native Windows package installation hook
+            subprocess.run([
+                "winget", "install", "--id", "Python.Python.3.12", 
+                "--silent", "--accept-source-agreements", "--accept-package-agreements"
+            ], check=True)
+            print("✅ Python successfully registered! Please restart your terminal and run install.py again.")
+            sys.exit(0)
+        except Exception as e:
+            print(f"❌ Automated Windows installation failed: {e}")
+            print("Please configure Python manually from python.org/downloads")
+            sys.exit(1)
 else:
+    # macOS Configuration Paths
     install_dir = os.path.expanduser("~/Documents/RoboticsAgent")
     python_command = "python3"
+    
+    if shutil.which("python3") is None:
+        print("⚠️ Python3 environment missing from macOS runtime!")
+        print("📥 Initializing Homebrew background tracker framework...")
+        try:
+            # Install Homebrew if it's missing on the MacBook
+            if shutil.which("brew") is None:
+                brew_installer = '/bin/bash -c "$(curl -fsSL https://githubusercontent.com)"'
+                subprocess.run(brew_installer, shell=True, check=True)
+            
+            # Silently download Python package bindings
+            print("📥 Fetching Python binaries via Homebrew...")
+            subprocess.run(["brew", "install", "python"], check=True)
+            print("✅ Python successfully registered! Please restart your terminal and run install.py again.")
+            sys.exit(0)
+        except Exception as e:
+            print(f"❌ Automated macOS installation failed: {e}")
+            sys.exit(1)
 
 os.makedirs(install_dir, exist_ok=True)
 agent_file_path = os.path.join(install_dir, "agent.py")
@@ -47,9 +83,8 @@ except Exception as main_error:
             print("❌ Critical Error: No local backup or internet available.")
             sys.exit()
 
-# 4. 🧙‍♂️ THE SETUP WIZARD: Secure Token Setup for the User
-print("\n🔮 STARTING SETUP WIZARD...")
-print("🔑 Configuring Secret API Token...")
+# 4. Secure Token Setup Wizard for the User (Supports Read or Write Roles)
+print("\n🔑 Configuring Secret API Token...")
 current_token = os.getenv("HF_TOKEN")
 if current_token:
     print("✅ HF_TOKEN is already configured on this machine!")
@@ -59,10 +94,8 @@ else:
     
     if user_token:
         if is_windows:
-            # Set the user-level environment variable permanently on Windows
             subprocess.run(["powershell", "-Command", f'[Environment]::SetEnvironmentVariable("HF_TOKEN", "{user_token}", "User")'], capture_output=True)
         else:
-            # For Mac, append it directly to their profile configuration
             zshrc_path = os.path.expanduser("~/.zshrc")
             with open(zshrc_path, "a", encoding="utf-8") as zsh_file:
                 zsh_file.write(f'\nexport HF_TOKEN="{user_token}"\n')
@@ -80,7 +113,6 @@ except Exception as e:
 
 # 6. OS-Specific Shortcut Registration
 print("⚙️ Setting up terminal shortcut command...")
-
 if is_windows:
     powershell_setup_code = f"""
 function agent {{
@@ -100,14 +132,13 @@ function agent {{
         print("\n🎉 SUCCESS! Please restart PowerShell and type 'agent'!")
     except Exception as e:
         print(f"❌ Windows shortcut failed: {e}")
-
 else:
     mac_shortcut_code = f"alias agent='cd {install_dir} && python3 agent.py'"
     zshrc_path = os.path.expanduser("~/.zshrc")
-    
     try:
         with open(zshrc_path, "a", encoding="utf-8") as zsh_file:
             zsh_file.write("\n" + mac_shortcut_code + "\n")
         print("\n🎉 SUCCESS! Please restart the Terminal and type 'agent'!")
     except Exception as e:
         print(f"❌ Mac shortcut failed: {e}")
+
